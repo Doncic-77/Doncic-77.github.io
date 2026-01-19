@@ -1,1 +1,0 @@
-../../../blog/hello-world.md

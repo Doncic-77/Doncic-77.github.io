@@ -1,0 +1,1 @@
+../../../trash/随笔/hello-world.md

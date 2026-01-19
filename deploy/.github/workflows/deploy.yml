@@ -48,13 +48,18 @@ jobs:
               continue
             fi
             
+            # 跳过 node_modules 目录
+            if [[ "$relative_path" == *node_modules* ]]; then
+              continue
+            fi
+            
             # 将路径转换为链接名：目录1/目录2/文件.md -> 目录1_目录2_文件.md
             # 移除 .md 扩展名，替换路径分隔符为下划线
             link_name=$(echo "$relative_path" | sed 's|\.md$||' | sed 's|/|_|g')
             link_name="${link_name}.md"
             
-            # 创建符号链接
-            ln -sf "../../$relative_path" "$link_name"
+            # 创建符号链接（从 deploy/source/_posts/ 到项目根目录需要 ../../../）
+            ln -sf "../../../$relative_path" "$link_name"
           done
           
           echo "Created symlinks for all markdown files"
