@@ -1,10 +1,18 @@
+# OS files
 .DS_Store
 Thumbs.db
-db.json
-*.log
-node_modules/
-public/
-.deploy*/
+
+# Hexo files (in deploy/)
+deploy/db.json
+deploy/*.log
+deploy/node_modules/
+deploy/public/
+deploy/.deploy*/
+
+# IDE
 .idea/
 .vscode/
+
+# Blog posts are in blog/ directory (tracked)
+# deploy/source/_posts/ contains symlinks (tracked)
 

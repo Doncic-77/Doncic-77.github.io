@@ -25,10 +25,23 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd deploy
           npm install
+
+      - name: Create symlinks for blog posts
+        run: |
+          cd deploy/source/_posts
+          rm -f *.md
+          for f in ../../blog/*.md; do
+            if [ -f "$f" ]; then
+              filename=$(basename "$f")
+              ln -sf "../../../blog/$filename" "$filename"
+            fi
+          done
 
       - name: Generate static files
         run: |
+          cd deploy
           npm run clean
           npm run build
 
@@ -36,6 +49,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: ./deploy/public
           cname: false
 
