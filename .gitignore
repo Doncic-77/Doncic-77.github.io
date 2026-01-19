@@ -8,6 +8,8 @@ deploy/*.log
 deploy/node_modules/
 deploy/public/
 deploy/.deploy*/
+deploy/source/book/
+deploy/source/_posts/
 
 # IDE
 .idea/
