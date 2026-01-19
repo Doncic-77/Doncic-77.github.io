@@ -14,7 +14,7 @@ fi
 TITLE="$1"
 CATEGORY_DIR="${2:-随笔}"  # 默认使用"随笔"目录
 
-# 获取项目根目录（deploy/scripts/ 的上级目录的上级目录）
+# 获取项目根目录（deploy/scripts-tools/ 的上级目录的上级目录）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
