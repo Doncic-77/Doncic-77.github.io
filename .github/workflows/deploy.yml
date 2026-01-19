@@ -1,0 +1,145 @@
+name: Deploy Hexo to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd deploy
+          npm install
+
+      - name: Create symlinks for blog posts
+        run: |
+          cd deploy/source/_posts
+          rm -f *.md
+          
+          # 遍历所有非 deploy 目录，包括嵌套目录
+          find ../.. -name "*.md" -type f | while read -r f; do
+            # 获取相对于项目根目录的路径
+            relative_path=$(echo "$f" | sed 's|^\.\./\.\./||')
+            
+            # 跳过 deploy 目录中的文件
+            if [[ "$relative_path" == deploy/* ]]; then
+              continue
+            fi
+            
+            # 跳过 .git 目录
+            if [[ "$relative_path" == .git/* ]]; then
+              continue
+            fi
+            
+            # 跳过 node_modules 目录
+            if [[ "$relative_path" == *node_modules* ]]; then
+              continue
+            fi
+            
+            # 跳过 trash 目录
+            if [[ "$relative_path" == trash/* ]]; then
+              continue
+            fi
+            
+            # 跳过 prompt 目录（设计文档，不是文章）
+            if [[ "$relative_path" == prompt/* ]]; then
+              continue
+            fi
+            
+            # 将路径转换为链接名：目录1/目录2/文件.md -> 目录1_目录2_文件.md
+            # 移除 .md 扩展名，替换路径分隔符为下划线
+            link_name=$(echo "$relative_path" | sed 's|\.md$||' | sed 's|/|_|g')
+            link_name="${link_name}.md"
+            
+            # 创建符号链接（从 deploy/source/_posts/ 到项目根目录需要 ../../../）
+            ln -sf "../../../$relative_path" "$link_name"
+          done
+          
+          echo "Created symlinks for all markdown files"
+
+      - name: Set permalinks based on file paths
+        run: |
+          cd deploy/source/_posts
+          for link in *.md; do
+            if [ -L "$link" ]; then
+              # 获取符号链接指向的实际文件路径
+              real_file=$(readlink -f "$link")
+              
+              # 获取相对于项目根目录的路径
+              project_root="$(cd ../../.. && pwd)"
+              relative_path=$(realpath --relative-to="$project_root" "$real_file" 2>/dev/null || echo "$real_file" | sed "s|^$project_root/||")
+              
+              # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom/
+              url_path=$(echo "$relative_path" | sed 's|\.md$||')/
+              
+              # 读取文件内容
+              if [ -f "$real_file" ]; then
+                # 检查是否已有 permalink
+                if ! grep -q "^permalink:" "$real_file"; then
+                  # 在 front matter 中添加 permalink（在 updated 或 date 行后）
+                  if grep -q "^updated:" "$real_file"; then
+                    sed -i "/^updated:/a permalink: $url_path" "$real_file"
+                  elif grep -q "^date:" "$real_file"; then
+                    sed -i "/^date:/a permalink: $url_path" "$real_file"
+                  fi
+                  echo "Set permalink for $relative_path: $url_path"
+                fi
+              fi
+            fi
+          done
+
+      - name: Copy images to Hexo source
+        run: |
+          cd deploy/source
+          # 复制文章文件夹中的图片文件到对应的位置
+          find ../.. -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) \
+            -not -path "*/deploy/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/trash/*" \
+            -not -path "*/prompt/*" \
+            -not -path "*/node_modules/*" | while read -r img; do
+            # 获取相对于项目根目录的路径
+            relative_path=$(echo "$img" | sed 's|^\.\./\.\./||')
+            # 获取图片所在的目录路径（相对于项目根目录）
+            img_dir=$(dirname "$relative_path")
+            # 在 source 目录中创建相同的目录结构
+            mkdir -p "$img_dir"
+            # 复制图片文件
+            cp "$img" "$relative_path"
+            echo "Copied image: $relative_path"
+          done
+          # 验证图片是否已复制
+          echo "Images in source directory:"
+          find . -name "*.png" -o -name "*.jpg" | head -10
+
+      - name: Generate static files
+        run: |
+          cd deploy
+          npm run clean
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy/public
+          branch: gh-pages
+          cname: false
+
