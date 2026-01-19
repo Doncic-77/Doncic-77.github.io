@@ -1,20 +1,36 @@
 #!/bin/bash
 # 更新文章的修改时间
-# 用法: ./update-post-date.sh "文章文件名.md"
+# 用法: ./update-post-date.sh "文章文件名.md" 或 "分类目录/文章.md"
+# 示例: ./update-post-date.sh "hello-world.md"
+# 示例: ./update-post-date.sh "随笔/hello-world.md"
+# 示例: ./update-post-date.sh "前端/React/文章.md"
 
 if [ -z "$1" ]; then
-    echo "用法: $0 \"文章文件名.md\""
+    echo "用法: $0 \"文章文件名.md\" 或 \"分类目录/文章.md\""
     echo "示例: $0 hello-world.md"
+    echo "示例: $0 随笔/hello-world.md"
+    echo "示例: $0 前端/React/文章.md"
     exit 1
 fi
 
 # 获取项目根目录（deploy/scripts/ 的上级目录的上级目录）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-POST_FILE="$PROJECT_ROOT/blog/$1"
 
-if [ ! -f "$POST_FILE" ]; then
-    echo "错误: 文件不存在: $POST_FILE"
+# 查找文章文件（支持在任意目录中）
+POST_FILE=""
+if [ -f "$PROJECT_ROOT/$1" ]; then
+    POST_FILE="$PROJECT_ROOT/$1"
+elif [ -f "$1" ]; then
+    POST_FILE="$1"
+else
+    # 在所有非 deploy 目录中查找
+    POST_FILE=$(find "$PROJECT_ROOT" -name "$1" -type f -not -path "*/deploy/*" -not -path "*/.git/*" | head -1)
+fi
+
+if [ -z "$POST_FILE" ] || [ ! -f "$POST_FILE" ]; then
+    echo "错误: 文件不存在: $1"
+    echo "提示: 可以使用相对路径，如 '随笔/文章.md' 或 '前端/React/文章.md'"
     exit 1
 fi
 
@@ -46,7 +62,9 @@ updated: $UPDATED_DATE
     echo "已添加修改时间: $UPDATED_DATE"
 fi
 
+# 获取文件相对于项目根目录的路径
+RELATIVE_PATH=$(echo "$POST_FILE" | sed "s|^$PROJECT_ROOT/||")
+
 echo "完成！请提交更改:"
 echo "  cd $PROJECT_ROOT"
-echo "  git add blog/ && git commit -m '更新文章时间' && git push"
-
+echo "  git add $RELATIVE_PATH && git commit -m '更新文章时间' && git push"
