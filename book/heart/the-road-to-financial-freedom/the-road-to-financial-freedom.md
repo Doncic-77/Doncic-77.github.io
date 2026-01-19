@@ -2,7 +2,7 @@
 title: The Road to Financial Freedom
 date: 2026-01-19 17:49:09
 updated: 2026-01-19 17:49:09
-permalink: book/heart/the-road-to-financial-freedom/
+permalink: book/heart/the-road-to-financial-freedom/the-road-to-financial-freedom/
 tags:
   - 理财
   - 个人成长
@@ -122,6 +122,8 @@ tags:
 
 如果总是觉得问题由外界因素引起，所以它不可控，这种想法本身就是问题。
 
+![个人范畴与可控领域](book/heart/the-road-to-financial-freedom/personal-scope-and-controllable-domain.png)
+
 ### 四个方法
 
 1. **走出舒适区**
@@ -238,6 +240,8 @@ tags:
 - 需要想象自己的成功人士，有这样的画面
 
 ## 目标设定
+
+![大目标与小目标](book/heart/the-road-to-financial-freedom/big-goal-vs-small-goal.png)
 
 - **大目标更容易达到，目标越大，问题越小**
 - 为自己设立有生之年无法实现的目标

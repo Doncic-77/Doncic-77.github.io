@@ -105,6 +105,27 @@ jobs:
             fi
           done
 
+      - name: Copy images to Hexo source
+        run: |
+          cd deploy/source
+          # 复制文章文件夹中的图片文件到对应的位置
+          find ../.. -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) \
+            -not -path "*/deploy/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/trash/*" \
+            -not -path "*/prompt/*" \
+            -not -path "*/node_modules/*" | while read -r img; do
+            # 获取相对于项目根目录的路径
+            relative_path=$(echo "$img" | sed 's|^\.\./\.\./||')
+            # 获取图片所在的目录路径（相对于项目根目录）
+            img_dir=$(dirname "$relative_path")
+            # 在 source 目录中创建相同的目录结构
+            mkdir -p "$img_dir"
+            # 复制图片文件
+            cp "$img" "$relative_path"
+            echo "Copied image: $relative_path"
+          done
+
       - name: Generate static files
         run: |
           cd deploy
