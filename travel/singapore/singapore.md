@@ -1,3 +1,13 @@
+---
+title: 新加坡旅行指南
+date: 2026-01-19 20:05:00
+updated: 2026-01-19 20:05:00
+permalink: travel/singapore/singapore/
+tags:
+  - 旅行
+  - 新加坡
+---
+
 # 新加坡旅行指南
 
 ## 必备
