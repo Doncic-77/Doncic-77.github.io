@@ -30,6 +30,7 @@ jobs:
 
       - name: Create symlinks for blog posts
         run: |
+          mkdir -p deploy/source/_posts
           cd deploy/source/_posts
           rm -f *.md
           
@@ -76,6 +77,7 @@ jobs:
 
       - name: Set permalinks based on file paths
         run: |
+          mkdir -p deploy/source/_posts
           cd deploy/source/_posts
           for link in *.md; do
             if [ -L "$link" ]; then
