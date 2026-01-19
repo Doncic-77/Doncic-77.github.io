@@ -85,7 +85,9 @@ jobs:
           cd deploy/source/_posts
           
           # 如果没有文件，跳过
-          if [ ! -f *.md ] 2>/dev/null; then
+          shopt -s nullglob
+          files=(*.md)
+          if [ ${#files[@]} -eq 0 ]; then
             echo "No markdown files found, skipping permalink setup"
             exit 0
           fi
