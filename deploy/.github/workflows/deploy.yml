@@ -64,6 +64,37 @@ jobs:
           
           echo "Created symlinks for all markdown files"
 
+      - name: Set permalinks based on file paths
+        run: |
+          cd deploy/source/_posts
+          for link in *.md; do
+            if [ -L "$link" ]; then
+              # 获取符号链接指向的实际文件路径
+              real_file=$(readlink -f "$link")
+              
+              # 获取相对于项目根目录的路径
+              project_root="$(cd ../../.. && pwd)"
+              relative_path=$(realpath --relative-to="$project_root" "$real_file" 2>/dev/null || echo "$real_file" | sed "s|^$project_root/||")
+              
+              # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom
+              url_path=$(echo "$relative_path" | sed 's|\.md$||')
+              
+              # 读取文件内容
+              if [ -f "$real_file" ]; then
+                # 检查是否已有 permalink
+                if ! grep -q "^permalink:" "$real_file"; then
+                  # 在 front matter 中添加 permalink（在 updated 或 date 行后）
+                  if grep -q "^updated:" "$real_file"; then
+                    sed -i "/^updated:/a permalink: $url_path" "$real_file"
+                  elif grep -q "^date:" "$real_file"; then
+                    sed -i "/^date:/a permalink: $url_path" "$real_file"
+                  fi
+                  echo "Set permalink for $relative_path: $url_path"
+                fi
+              fi
+            fi
+          done
+
       - name: Generate static files
         run: |
           cd deploy
