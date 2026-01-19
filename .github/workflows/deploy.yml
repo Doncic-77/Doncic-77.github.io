@@ -30,95 +30,34 @@ jobs:
 
       - name: Create symlinks for blog posts
         run: |
-          # 确保在项目根目录
-          cd ${{ github.workspace }}
-          mkdir -p deploy/source/_posts
-          cd deploy/source/_posts
-          rm -f *.md
-          
-          # 遍历所有非 deploy 目录，包括嵌套目录
-          find ../.. -name "*.md" -type f | while read -r f; do
-            # 获取相对于项目根目录的路径
-            relative_path=$(echo "$f" | sed 's|^\.\./\.\./||')
-            
-            # 跳过 deploy 目录中的文件
-            if [[ "$relative_path" == deploy/* ]]; then
-              continue
-            fi
-            
-            # 跳过 .git 目录
-            if [[ "$relative_path" == .git/* ]]; then
-              continue
-            fi
-            
-            # 跳过 node_modules 目录
-            if [[ "$relative_path" == *node_modules* ]]; then
-              continue
-            fi
-            
-            # 跳过 trash 目录
-            if [[ "$relative_path" == trash/* ]]; then
-              continue
-            fi
-            
-            # 跳过 prompt 目录（设计文档，不是文章）
-            if [[ "$relative_path" == prompt/* ]]; then
-              continue
-            fi
-            
-            # 将路径转换为链接名：目录1/目录2/文件.md -> 目录1_目录2_文件.md
-            # 移除 .md 扩展名，替换路径分隔符为下划线
-            link_name=$(echo "$relative_path" | sed 's|\.md$||' | sed 's|/|_|g')
-            link_name="${link_name}.md"
-            
-            # 创建符号链接（从 deploy/source/_posts/ 到项目根目录需要 ../../../）
-            ln -sf "../../../$relative_path" "$link_name"
-          done
-          
-          echo "Created symlinks for all markdown files"
+          set -euo pipefail
 
-      - name: Set permalinks based on file paths
-        run: |
-          # 确保在项目根目录
-          cd ${{ github.workspace }}
-          mkdir -p deploy/source/_posts
-          cd deploy/source/_posts
-          
-          # 如果没有文件，跳过
-          shopt -s nullglob
-          files=(*.md)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No markdown files found, skipping permalink setup"
-            exit 0
-          fi
-          
-          for link in *.md; do
-            if [ -L "$link" ]; then
-              # 获取符号链接指向的实际文件路径
-              real_file=$(readlink -f "$link")
-              
-              # 获取相对于项目根目录的路径
-              project_root="${{ github.workspace }}"
-              relative_path=$(realpath --relative-to="$project_root" "$real_file" 2>/dev/null || echo "$real_file" | sed "s|^$project_root/||")
-              
-              # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom/
-              url_path=$(echo "$relative_path" | sed 's|\.md$||')/
-              
-              # 读取文件内容
-              if [ -f "$real_file" ]; then
-                # 检查是否已有 permalink
-                if ! grep -q "^permalink:" "$real_file"; then
-                  # 在 front matter 中添加 permalink（在 updated 或 date 行后）
-                  if grep -q "^updated:" "$real_file"; then
-                    sed -i "/^updated:/a permalink: $url_path" "$real_file"
-                  elif grep -q "^date:" "$real_file"; then
-                    sed -i "/^date:/a permalink: $url_path" "$real_file"
-                  fi
-                  echo "Set permalink for $relative_path: $url_path"
-                fi
-              fi
-            fi
-          done
+          # 在 runner 上确保从项目根目录执行
+          cd "$GITHUB_WORKSPACE"
+
+          posts_dir="deploy/source/_posts"
+          mkdir -p "$posts_dir"
+          rm -f "$posts_dir"/*.md || true
+
+          # 扫描整个仓库（排除 deploy/trash/prompt/.git/node_modules）
+          while IFS= read -r -d '' f; do
+            relative_path="${f#"$GITHUB_WORKSPACE"/}"
+
+            case "$relative_path" in
+              deploy/*|trash/*|prompt/*|.git/*|*node_modules/*)
+                continue
+                ;;
+            esac
+
+            # 扁平化文件名：目录1/目录2/文件.md -> 目录1_目录2_文件.md
+            link_name="${relative_path%.md}"
+            link_name="${link_name//\//_}.md"
+
+            # 用绝对路径创建 symlink（更稳，不依赖相对路径深度）
+            ln -sf "$f" "$posts_dir/$link_name"
+          done < <(find "$GITHUB_WORKSPACE" -name "*.md" -type f -print0)
+
+          echo "Created symlinks under $posts_dir"
 
       - name: Copy images to Hexo source
         run: |
