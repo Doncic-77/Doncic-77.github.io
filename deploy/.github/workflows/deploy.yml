@@ -76,8 +76,8 @@ jobs:
               project_root="$(cd ../../.. && pwd)"
               relative_path=$(realpath --relative-to="$project_root" "$real_file" 2>/dev/null || echo "$real_file" | sed "s|^$project_root/||")
               
-              # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom
-              url_path=$(echo "$relative_path" | sed 's|\.md$||')
+              # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom/
+              url_path=$(echo "$relative_path" | sed 's|\.md$||')/
               
               # 读取文件内容
               if [ -f "$real_file" ]; then
