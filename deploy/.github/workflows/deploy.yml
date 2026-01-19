@@ -53,6 +53,16 @@ jobs:
               continue
             fi
             
+            # 跳过 trash 目录
+            if [[ "$relative_path" == trash/* ]]; then
+              continue
+            fi
+            
+            # 跳过 prompt 目录（设计文档，不是文章）
+            if [[ "$relative_path" == prompt/* ]]; then
+              continue
+            fi
+            
             # 将路径转换为链接名：目录1/目录2/文件.md -> 目录1_目录2_文件.md
             # 移除 .md 扩展名，替换路径分隔符为下划线
             link_name=$(echo "$relative_path" | sed 's|\.md$||' | sed 's|/|_|g')
