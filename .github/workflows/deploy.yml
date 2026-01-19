@@ -30,6 +30,8 @@ jobs:
 
       - name: Create symlinks for blog posts
         run: |
+          # 确保在项目根目录
+          cd ${{ github.workspace }}
           mkdir -p deploy/source/_posts
           cd deploy/source/_posts
           rm -f *.md
@@ -77,15 +79,24 @@ jobs:
 
       - name: Set permalinks based on file paths
         run: |
+          # 确保在项目根目录
+          cd ${{ github.workspace }}
           mkdir -p deploy/source/_posts
           cd deploy/source/_posts
+          
+          # 如果没有文件，跳过
+          if [ ! -f *.md ] 2>/dev/null; then
+            echo "No markdown files found, skipping permalink setup"
+            exit 0
+          fi
+          
           for link in *.md; do
             if [ -L "$link" ]; then
               # 获取符号链接指向的实际文件路径
               real_file=$(readlink -f "$link")
               
               # 获取相对于项目根目录的路径
-              project_root="$(cd ../../.. && pwd)"
+              project_root="${{ github.workspace }}"
               relative_path=$(realpath --relative-to="$project_root" "$real_file" 2>/dev/null || echo "$real_file" | sed "s|^$project_root/||")
               
               # 转换为 URL 路径：book/heart/the-road-to-financial-freedom.md -> book/heart/the-road-to-financial-freedom/
