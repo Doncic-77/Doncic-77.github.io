@@ -22,11 +22,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: deploy/package-lock.json
 
       - name: Install dependencies
         run: |
           cd deploy
-          npm install
+          npm ci
 
       - name: Create symlinks for blog posts
         run: |
@@ -61,32 +63,17 @@ jobs:
 
       - name: Copy images to Hexo source
         run: |
-          cd deploy/source
-          # 复制文章文件夹中的图片文件到对应的位置
-          find ../.. -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) \
-            -not -path "*/deploy/*" \
-            -not -path "*/.git/*" \
-            -not -path "*/trash/*" \
-            -not -path "*/prompt/*" \
-            -not -path "*/node_modules/*" | while read -r img; do
-            # 获取相对于项目根目录的路径
-            relative_path=$(echo "$img" | sed 's|^\.\./\.\./||')
-            # 获取图片所在的目录路径（相对于项目根目录）
-            img_dir=$(dirname "$relative_path")
-            # 在 source 目录中创建相同的目录结构
-            mkdir -p "$img_dir"
-            # 复制图片文件
-            cp "$img" "$relative_path"
-            echo "Copied image: $relative_path"
-          done
-          # 验证图片是否已复制
-          echo "Images in source directory:"
-          find . -name "*.png" -o -name "*.jpg" | head -10
+          cd "$GITHUB_WORKSPACE"
+          # 使用 rsync 高效复制图片文件（自动处理目录结构）
+          rsync -av --include='*/' --include='*.png' --include='*.jpg' --include='*.jpeg' --include='*.gif' --include='*.svg' \
+            --exclude='deploy/' --exclude='trash/' --exclude='prompt/' --exclude='.git/' --exclude='node_modules/' \
+            --exclude='*' \
+            ./ deploy/source/
+          echo "Images synced to deploy/source/"
 
       - name: Generate static files
         run: |
           cd deploy
-          npm run clean
           npm run build
 
       - name: Deploy to GitHub Pages
