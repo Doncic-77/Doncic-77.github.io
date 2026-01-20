@@ -1,0 +1,12 @@
+<a href="<%- url_for(post.path) %>" class="<%= class_name %>">
+  <time class="dt-published" datetime="<%= date_xml(post.date) %>" itemprop="datePublished">
+    创建: <%= date(post.date, date_format) %>
+  </time>
+  <% if (post.updated && +post.updated !== +post.date) { %>
+    <br>
+    <time class="dt-updated" datetime="<%= date_xml(post.updated) %>" itemprop="dateModified">
+      更新: <%= date(post.updated, date_format) %>
+    </time>
+  <% } %>
+</a>
+
