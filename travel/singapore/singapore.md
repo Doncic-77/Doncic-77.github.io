@@ -10,17 +10,22 @@ tags:
 
 ## 必备
 
-- 英标（Type G）转换插头
-- MyICA Mobile
-- Grab
-- 流量包
-- 现金
-- Google Pay + Visa
-- Tourist Pass
-- EZ-Link
-- 主备 Visa 卡
-- 备用手机
-- 腰包
+- 证件与APP
+  - MyICA Mobile
+- 交通
+  - Grab
+  - Tourist Pass
+  - EZ-Link
+- 支付
+  - 现金
+  - Google Pay + Visa
+  - 主备 Visa 卡
+- 通讯
+  - 流量包
+  - 备用手机
+- 其他物品
+  - 英标（Type G）转换插头
+  - 腰包
 
 ## 景点
 
