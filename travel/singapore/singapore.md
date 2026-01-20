@@ -1,7 +1,7 @@
 ---
 title: 新加坡旅行指南
 date: 2026-01-19 20:05:00
-updated: 2026-01-20 10:42:00
+updated: 2026-01-20 20:35:00
 permalink: travel/singapore/singapore/
 tags:
   - 旅行
@@ -73,6 +73,12 @@ tags:
 - Takashimaya
 - 高岛屋书店（非常值得）
 - 文具、生活方式品牌
+
+### other
+
+- 芽笼的留恋
+- abc超市的零食
+- 超市里的咖啡乌
 
 ## 美食
 
