@@ -66,21 +66,38 @@ trash/
 
 ## 项目结构示例
 
+**⚠️ 重要：此项目结构示例必须与实际项目保持同步**
+
+当项目结构发生变化时（新增或删除目录、文件），必须同步更新此示例，以便 AI 能够准确理解项目的当前状态。
+
 ```
 /root/code/
 ├── deploy/              # 部署相关（Hexo 配置、脚本、工作流）
-│   ├── scripts-tools/   # 部署脚本
+│   ├── .github/         # GitHub Actions 工作流
+│   │   └── workflows/
+│   │       └── deploy.yml
 │   ├── _config.yml      # Hexo 配置
-│   ├── .github/         # GitHub Actions
+│   ├── source/          # Hexo 源文件目录
+│   │   ├── _posts/      # 文章目录（符号链接）
+│   │   └── about/       # 关于页面
 │   └── ...
 ├── book/                # 文章内容（书籍相关）
 │   └── heart/
-│       └── the-road-to-financial-freedom.md  ✅ 会被部署
+│       └── the-road-to-financial-freedom/
+│           └── the-road-to-financial-freedom.md  ✅ 会被部署
+├── principle/           # 文章内容（原则和方法论）
+│   └── principle.md     ✅ 会被部署
+├── security/            # 文章内容（安全相关）
+│   └── OIDC/
+│       └── OIDC.md      ✅ 会被部署
+├── travel/              # 文章内容（旅游相关）
+│   └── singapore/
+│       └── singapore.md ✅ 会被部署
 ├── prompt/              # 设计文档和 prompt
 │   └── project-structure-and-articles.md     ❌ 不会被部署
 ├── trash/               # 垃圾文件（在 .gitignore 中）
 │   └── old-article.md   ❌ 不会被部署
-└── .gitignore          # 忽略 trash/ 目录
+└── .gitignore           # 忽略 trash/ 目录
 ```
 
 ## 自动收集机制
@@ -106,6 +123,40 @@ GitHub Actions 工作流会自动：
 2. **AI 助手理解项目**：喂给大模型时，能快速理解设计意图和文章筛选规则
 3. **维护项目一致性**：确保新文件放在正确的位置，符合文章定义的文件会被自动部署
 
+## 本文档的核心目的
+
+**帮助 AI 快速理解项目结构，并高效地完成博客推送任务。**
+
+### AI 工作流程
+
+当用户说"帮我推送到博客"时，AI 应该：
+
+1. **检查文件修改**
+   ```bash
+   git status
+   ```
+
+2. **确认 `updated` 字段已更新**
+   - 检查修改的文章是否更新了 `updated` 字段为当前时间
+   - 如果没有更新，提醒用户或帮助更新
+
+3. **提交并推送**
+   ```bash
+   git add <修改的文件>
+   git commit -m "update: 简短描述修改内容"
+   git push origin main
+   ```
+
+4. **确认部署**
+   - 推送到 `main` 分支后，GitHub Actions 会自动触发部署
+   - 部署完成后，博客会自动更新
+
+### 关键原则
+
+- **项目结构示例必须实时更新**：当项目结构变化时，同步更新本文档中的示例
+- **文章必须更新 `updated` 字段**：每次修改文章后推送前，必须更新时间戳
+- **自动化部署**：只要推送到 `main` 分支，所有符合定义的文章都会自动部署
+
 ## 文章时间戳规则
 
 每篇文章的 front matter 必须包含时间戳字段：
@@ -113,12 +164,21 @@ GitHub Actions 工作流会自动：
 - **`date`**：文章创建时间，只在首次创建时设置，之后不再修改
 - **`updated`**：文章最后修改时间，**每次修改文章内容时必须更新**
 
+### ⚠️ 重要：修改文章时必须更新 `updated` 字段
+
+**每次修改文章内容后，在推送到博客之前，必须手动更新 `updated` 字段为当前时间。**
+
+更新方式：
+```yaml
+updated: 2026-01-20 19:30:00  # 改为当前的日期和时间
+```
+
 示例：
 ```yaml
 ---
 title: 文章标题
 date: 2026-01-19 17:49:09
-updated: 2026-01-20 15:30:00  # 每次修改都要更新这个时间
+updated: 2026-01-20 19:30:00  # 每次修改都要更新这个时间
 tags:
   - 标签1
   - 标签2
@@ -139,7 +199,4 @@ tags:
 - **文章 URL 规则**：基于文件路径，如 `book/heart/the-road-to-financial-freedom/`
 - **时间戳管理**：每次修改文章都要更新 `updated` 字段，按修改时间排序显示
 
-## 日期
-
-2026-01-19
 
