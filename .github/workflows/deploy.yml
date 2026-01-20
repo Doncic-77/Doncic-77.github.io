@@ -64,12 +64,17 @@ jobs:
       - name: Copy images to Hexo source
         run: |
           cd "$GITHUB_WORKSPACE"
-          # 使用 rsync 高效复制图片文件（自动处理目录结构）
-          rsync -av --include='*/' --include='*.png' --include='*.jpg' --include='*.jpeg' --include='*.gif' --include='*.svg' \
-            --exclude='deploy/' --exclude='trash/' --exclude='prompt/' --exclude='.git/' --exclude='node_modules/' \
-            --exclude='*' \
-            ./ deploy/source/
-          echo "Images synced to deploy/source/"
+          # 高效复制图片：只查找 book/ 和 travel/ 等内容目录
+          for dir in book travel; do
+            if [ -d "$dir" ]; then
+              find "$dir" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | while read -r img; do
+                target_dir="deploy/source/$(dirname "$img")"
+                mkdir -p "$target_dir"
+                cp -u "$img" "$target_dir/"
+              done
+            fi
+          done
+          echo "Images copied to deploy/source/"
 
       - name: Generate static files
         run: |
