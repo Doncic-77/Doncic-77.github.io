@@ -1,0 +1,59 @@
+# ===============
+# Header
+# ===============
+# Navigation menu
+menu:
+  Home: /
+  Archives: /archives
+# RSS link
+rss: /atom.xml
+# Path of title banner image of page top
+banner: "images/banner.jpg"
+# Subtitle of page top
+subtitle:
+
+# ===============
+# Content
+# ===============
+# "Read More" link at the bottom of excerpted articles. `false` to hide the link.
+excerpt_link: Read More
+# Enable fancybox
+fancybox: true
+
+# ===============
+# Footer
+# ===============
+copyright:
+
+# ===============
+# Sidebar
+# ===============
+# Sidebar style. You can choose `left`, `right`, `bottom` or `false`.
+sidebar: right
+# Widgets displaying in sidebar
+widgets:
+- category
+- tag
+- tagcloud
+- archive
+- recent_posts
+
+# ===============
+# Comment
+# ===============
+# Disqus
+disqus_shortname:
+
+# Valine
+valine:
+  enable: false
+  appId:
+  appKey:
+  notify: false
+  verify: false
+  placeholder: Just go go
+  avatar: mm
+  guest_info: nick,mail,link
+  pageSize: 10
+  visitor: false
+
