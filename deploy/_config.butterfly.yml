@@ -18,10 +18,11 @@ nav:
   fixed: false
 
 menu:
-  # Home: / || fas fa-home
-  # List||fas fa-list:
-  #   Music: /music/ || fas fa-music
-  #   Movie: /movies/ || fas fa-video
+  主页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+  关于: /about/ || fas fa-heart
 
 # --------------------------------------
 # Code Blocks Settings
@@ -46,8 +47,9 @@ code_blocks:
 # Formal:
 #   icon: link || the description || color
 social:
-  # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
-  # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
+  fab fa-github: https://github.com/Doncic-77 || Github || '#24292e'
+  fas fa-envelope: mailto:doncic77@example.com || Email || '#4a7dbe'
+  fas fa-rss: /atom.xml || RSS || '#ff6600'
 
 # --------------------------------------
 # Image Settings
@@ -56,17 +58,17 @@ social:
 favicon: /img/favicon.png
 
 avatar:
-  img: /img/butterfly-icon.png
-  effect: false
+  img: https://avatars.githubusercontent.com/u/1?v=4
+  effect: true
 
 # Disable all banner images
 disable_top_img: false
 
 # If the banner of page not setting, it will show the default_top_img
-default_top_img:
+default_top_img: https://source.unsplash.com/random/1920x1080/?nature,technology
 
 # The banner image of index page
-index_img:
+index_img: https://source.unsplash.com/random/1920x1080/?landscape,sunset
 
 # The banner image of archive page
 archive_img:
@@ -102,7 +104,11 @@ cover:
   archives_enable: true
   # When cover is not set, the default cover is displayed
   default_cover:
-    # - xxx.jpg
+    - https://source.unsplash.com/random/800x450/?coding,technology
+    - https://source.unsplash.com/random/800x450/?book,reading
+    - https://source.unsplash.com/random/800x450/?travel,nature
+    - https://source.unsplash.com/random/800x450/?security,lock
+    - https://source.unsplash.com/random/800x450/?learning,education
 
 # Replace Broken Images
 error_img:
@@ -119,7 +125,7 @@ post_meta:
   # Home Page
   page:
     # Choose: created / updated / both
-    date_type: created
+    date_type: both
     # Choose: date / relative
     date_format: date
     categories: true
