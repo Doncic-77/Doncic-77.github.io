@@ -1,7 +1,7 @@
 ---
 title: 原则
 date: 2026-01-20 19:20:00
-updated: 2026-01-20 20:45:00
+updated: 2026-01-21 11:20:00
 permalink: principle/principle/
 sticky: 100
 tags:
