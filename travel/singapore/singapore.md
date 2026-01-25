@@ -1,7 +1,7 @@
 ---
 title: 新加坡旅行指南
 date: 2026-01-19 20:05:00
-updated: 2026-01-20 20:35:00
+updated: 2026-01-25 21:48:10
 permalink: travel/singapore/singapore/
 tags:
   - 旅行
@@ -25,6 +25,8 @@ tags:
 
 ### 通讯
 - 流量包
+  - 主手机卡，已买
+  - 当地sim卡，**未购买**
 - 备用手机
 
 ### 其他物品

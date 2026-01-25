@@ -81,6 +81,10 @@ trash/
 │   │   ├── _posts/      # 文章目录（符号链接）
 │   │   └── about/       # 关于页面
 │   └── ...
+├── ml/                  # 文章内容（机器学习/课程笔记等）
+│   └── cs189/
+│       └── lecture1/
+│           └── lecture1.md ✅ 会被部署
 ├── book/                # 文章内容（书籍相关）
 │   └── heart/
 │       └── the-road-to-financial-freedom/
@@ -90,6 +94,9 @@ trash/
 ├── security/            # 文章内容（安全相关）
 │   └── OIDC/
 │       └── OIDC.md      ✅ 会被部署
+├── source/              # 文章内容（不推荐与 Hexo 的 source 混淆，但目前会被自动收集）
+│   └── learn/
+│       └── learn.md     ✅ 会被部署
 ├── travel/              # 文章内容（旅游相关）
 │   └── singapore/
 │       └── singapore.md ✅ 会被部署
