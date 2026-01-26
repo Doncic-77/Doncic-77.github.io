@@ -1,7 +1,7 @@
 ---
 title: 学习方法论
 date: 2026-01-21 11:30:00
-updated: 2026-01-26 14:37:10
+updated: 2026-01-26 15:16:36
 permalink: source/learn/learn/
 tags:
   - 学习
@@ -27,7 +27,7 @@ tags:
 
 ### 刷课
 
-- [cs189-fall25](https://eecs189.org/fa25/)
+- [cs189-fall25](https://eecs189.org/fa25/) → [📚 查看我的 CS189 笔记](/categories/ml/cs189/)
 
 
 - [Stanford CS336: Language Modeling from Scratch](https://stanford-cs336.github.io/spring2025/index.html)
