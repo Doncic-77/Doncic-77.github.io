@@ -123,8 +123,8 @@ function renderCategoryPage(str, allCategories, currentPath) {
     return replaceCategoryContent(str, html);
   }
   
-  // 没有子分类，保持原有的文章列表，但添加导航
-  return addNavigationToArticleList(str, currentPath);
+  // 没有子分类，这是叶子节点，显示文章列表（用文件图标风格）
+  return renderArticleList(str, allCategories, currentPath);
 }
 
 // 生成分类表格 HTML
@@ -217,11 +217,31 @@ function generateCategoryTable(categories, parentPath) {
   return html;
 }
 
-// 为文章列表添加导航
-function addNavigationToArticleList(str, currentPath) {
-  const parts = currentPath.split('/');
+// 渲染叶子节点的文章列表（用文件图标风格）
+function renderArticleList(str, allCategories, currentPath) {
+  // 找到当前分类
+  const currentCategory = allCategories.find(cat => {
+    const catPath = getCategoryPath(cat);
+    return catPath === currentPath;
+  });
   
-  // 构建面包屑
+  // 获取文章列表
+  let posts = [];
+  if (currentCategory && currentCategory.posts) {
+    posts = currentCategory.posts.toArray();
+  }
+  
+  // 按标题排序
+  posts.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  
+  const html = generateArticleTable(posts, currentPath);
+  return replaceCategoryContent(str, html);
+}
+
+// 生成文章表格 HTML（叶子节点用）
+function generateArticleTable(posts, parentPath) {
+  // 构建面包屑导航
+  const parts = parentPath.split('/');
   let breadcrumbHtml = '<a href="/categories/">root</a>';
   let pathAccum = '';
   parts.forEach((part, idx) => {
@@ -234,45 +254,76 @@ function addNavigationToArticleList(str, currentPath) {
     }
   });
   
-  // 返回链接
+  // 构建返回链接
   let backLink = '';
   if (parts.length > 1) {
-    const parentPath = parts.slice(0, -1).join('/');
-    backLink = `<a href="/categories/${parentPath}/" class="qoj-back-link">◀ Back</a>`;
+    const parentOfParent = parts.slice(0, -1).join('/');
+    backLink = `<a href="/categories/${parentOfParent}/" class="qoj-back-link">◀ Back</a>`;
   } else {
     backLink = `<a href="/categories/" class="qoj-back-link">◀ Back</a>`;
   }
   
-  const navHtml = `
+  let html = `
 <style>
   .qoj-category-nav { margin-bottom: 20px; }
   .qoj-category-nav a { color: #4285f4; text-decoration: none; }
   .qoj-category-nav a:hover { text-decoration: underline; }
   .qoj-back-link { float: right; }
   .qoj-nav-header { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; color: #666; }
+  .qoj-category-table { width: 100%; border-collapse: collapse; }
+  .qoj-category-table thead tr { border-bottom: 2px solid #ddd; background: #f8f9fa; }
+  .qoj-category-table th { text-align: left; padding: 12px 15px; font-weight: bold; }
+  .qoj-category-table th:last-child { text-align: right; width: 150px; }
+  .qoj-category-table tbody tr { border-bottom: 1px solid #eee; }
+  .qoj-category-table tbody tr:hover { background: #f5f5f5; }
+  .qoj-category-table td { padding: 12px 15px; }
+  .qoj-category-table td:last-child { text-align: right; color: #666; }
+  .qoj-file-icon { margin-right: 10px; color: #f0ad4e; }
 </style>
 <div class="qoj-category-nav">
   <div class="qoj-nav-header">
     <span>Location: ${breadcrumbHtml}</span>
     ${backLink}
   </div>
+  <table class="qoj-category-table">
+    <thead>
+      <tr>
+        <th>文章</th>
+        <th>日期</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+  
+  posts.forEach(post => {
+    const title = post.title || '未命名';
+    // 确保路径以单斜杠开头
+    const href = post.path.startsWith('/') ? post.path : '/' + post.path;
+    // 格式化日期
+    let dateStr = '';
+    if (post.date) {
+      const d = new Date(post.date);
+      dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+    html += `
+      <tr>
+        <td>
+          <a href="${href}">
+            <span class="qoj-file-icon">📄</span><span>${title}</span>
+          </a>
+        </td>
+        <td>${dateStr}</td>
+      </tr>
+`;
+  });
+  
+  html += `
+    </tbody>
+  </table>
 </div>
 `;
   
-  // 在内容区域开始处插入导航
-  const patterns = [
-    /(<div[^>]*class="[^"]*category-lists[^"]*"[^>]*>)/,
-    /(<div[^>]*id="article-container"[^>]*>[\s\S]*?<article[^>]*>)/,
-    /(<main[^>]*>[\s\S]*?<div[^>]*class="[^"]*layout[^"]*"[^>]*>)/
-  ];
-  
-  for (const pattern of patterns) {
-    if (pattern.test(str)) {
-      return str.replace(pattern, '$1' + navHtml);
-    }
-  }
-  
-  return str;
+  return html;
 }
 
 // 替换分类内容区域
