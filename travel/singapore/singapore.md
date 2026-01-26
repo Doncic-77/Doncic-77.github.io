@@ -1,7 +1,7 @@
 ---
 title: 新加坡旅行指南
 date: 2026-01-19 20:05:00
-updated: 2026-01-25 21:55:05
+updated: 2026-01-26 14:37:10
 permalink: travel/singapore/singapore/
 tags:
   - 旅行
@@ -10,8 +10,10 @@ tags:
 
 ## 必备
 
-### 证件与APP
-- MyICA Mobile
+### 入境
+- MyICA Mobile（入境app）
+  - **未处理**
+- 护照
 
 ### 交通
 - Grab
