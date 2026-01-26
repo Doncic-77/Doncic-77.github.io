@@ -34,10 +34,12 @@ hexo.extend.filter.register('before_post_render', function(data) {
     const directories = pathParts.slice(0, -1);
     
     // 如果 front matter 中没有 categories，则自动设置
-    if (!data.categories || data.categories.length === 0) {
-      if (directories.length > 0) {
-        data.categories = directories;
-      }
+    // Hexo 的 categories 是特殊对象，需要这样判断
+    const hasCategories = data.categories && data.categories.data && data.categories.data.length > 0;
+    
+    if (!hasCategories && directories.length > 0) {
+      // 使用 Hexo 的 API 设置 categories
+      data.categories = directories;
     }
   } catch (e) {
     // 如果不是符号链接或读取失败，忽略

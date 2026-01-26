@@ -18,11 +18,8 @@ nav:
   fixed: false
 
 menu:
-  主页: / || fas fa-home
-  归档: /archives/ || fas fa-archive
-  标签: /tags/ || fas fa-tags
+  博客: /archives/ || fas fa-list
   分类: /categories/ || fas fa-folder-open
-  关于: /about/ || fas fa-heart
 
 # --------------------------------------
 # Code Blocks Settings
@@ -62,13 +59,13 @@ avatar:
   effect: true
 
 # Disable all banner images
-disable_top_img: false
+disable_top_img: true
 
 # If the banner of page not setting, it will show the default_top_img
-default_top_img: https://source.unsplash.com/random/1920x1080/?nature,technology
+default_top_img:
 
 # The banner image of index page
-index_img: https://source.unsplash.com/random/1920x1080/?landscape,sunset
+index_img:
 
 # The banner image of archive page
 archive_img:
