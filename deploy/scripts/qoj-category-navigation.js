@@ -1,8 +1,10 @@
-// Hexo 脚本：实现 QOJ 风格的分类导航
+// Hexo 脚本：实现 QOJ 风格的分类导航（类似 Windows 文件系统）
 // 1. categories 首页只显示顶级分类
-// 2. 每个分类页面只显示直接子分类
+// 2. 每个分类页面只显示直接子分类（点击进入下一层）
 // 3. 添加 Location 路径导航和 Back 返回按钮
 // 4. 叶子分类显示文章列表
+
+// 方法：使用 after_render:html 过滤器完全替换分类列表的 HTML
 
 hexo.extend.filter.register('after_render:html', function(str, data) {
   // 只处理 categories 相关页面
@@ -73,7 +75,7 @@ function renderCategoriesIndex(str, allCategories) {
 
 // 渲染具体分类页面
 function renderCategoryPage(str, allCategories, categoryName) {
-  // 收集直接子分类
+  // 收集直接子分类（只显示第一级子分类）
   const childrenMap = new Map(); // fullChildName -> { name, totalCount, path }
   
   allCategories.forEach(cat => {
@@ -111,7 +113,7 @@ function renderCategoryPage(str, allCategories, categoryName) {
   children.sort((a, b) => a.name.localeCompare(b.name));
   
   if (children.length > 0) {
-    // 有子分类，显示子分类列表
+    // 有子分类，显示子分类列表（替换掉文章列表）
     const html = generateCategoryTable(children, categoryName);
     return replaceCategoryContent(str, html);
   }
@@ -271,28 +273,93 @@ function addNavigationToArticleList(str, categoryName) {
   return str;
 }
 
-// 替换分类内容区域
+// 替换分类内容区域 - 使用最强大的匹配策略
 function replaceCategoryContent(str, newContent) {
-  // 方式1: 替换 .category-lists 中的内容（Butterfly 主题）
-  // 使用非贪婪匹配来处理嵌套标签问题
-  const categoryListsPattern = /(<div[^>]*class="[^"]*category-lists[^"]*"[^>]*>)([\s\S]*?)(<\/div>[\s]*<\/article>)/;
-  if (categoryListsPattern.test(str)) {
-    return str.replace(categoryListsPattern, '$1' + newContent + '$3');
+  // 策略1: 直接查找并替换 .category-lists div 及其所有内容
+  // 使用更精确的匹配，包括可能的嵌套结构
+  // list_categories() 可能生成 <ul><li> 嵌套结构
+  const categoryListsRegex = /<div[^>]*class="[^"]*category-lists[^"]*"[^>]*>[\s\S]*?<\/div>/;
+  const match = str.match(categoryListsRegex);
+  if (match) {
+    // 计算匹配的 div 标签深度，找到对应的闭合标签
+    const matchStart = str.indexOf(match[0]);
+    const matchContent = match[0];
+    
+    // 简单替换：直接替换整个匹配
+    return str.replace(categoryListsRegex, '<div class="category-lists">' + newContent + '</div>');
   }
   
-  // 方式2: 尝试更宽松的匹配
-  const loosePattern = /<div class="category-lists">[\s\S]*?<\/div>/;
-  if (loosePattern.test(str)) {
-    return str.replace(loosePattern, '<div class="category-lists">' + newContent + '</div>');
+  // 策略2: 如果找不到 category-lists，查找包含分类链接的区域
+  // list_categories 会生成包含 /categories/ 链接的 HTML
+  const categoryLinksRegex = /<div[^>]*>[\s\S]*?<a[^>]*href="[^"]*\/categories\/[^"]*"[\s\S]*?<\/div>/;
+  if (categoryLinksRegex.test(str)) {
+    // 找到包含分类链接的 div，尝试替换
+    const linkMatch = str.match(categoryLinksRegex);
+    if (linkMatch) {
+      // 查找这个 div 的开始位置
+      const linkMatchStart = str.indexOf(linkMatch[0]);
+      // 向前查找最近的 <div class="category-lists"> 或类似的 div
+      const beforeMatch = str.substring(0, linkMatchStart);
+      const categoryDivMatch = beforeMatch.match(/<div[^>]*class="[^"]*category[^"]*"[^>]*>/);
+      if (categoryDivMatch) {
+        const divStart = categoryDivMatch[0];
+        const divStartPos = beforeMatch.lastIndexOf(divStart);
+        // 向后查找对应的 </div>
+        const afterMatch = str.substring(linkMatchStart + linkMatch[0].length);
+        const divEndPos = afterMatch.indexOf('</div>');
+        if (divEndPos !== -1) {
+          const beforeDiv = str.substring(0, divStartPos);
+          const afterDiv = afterMatch.substring(divEndPos + 6);
+          return beforeDiv + '<div class="category-lists">' + newContent + '</div>' + afterDiv;
+        }
+      }
+    }
   }
   
-  // 方式3: 替换整个 article 内容
-  const articlePattern = /(<article[^>]*>)([\s\S]*?)(<\/article>)/;
-  if (articlePattern.test(str)) {
-    // 保留标题部分
-    const titleMatch = str.match(/<h1[^>]*class="[^"]*post-title[^"]*"[^>]*>[\s\S]*?<\/h1>/);
-    const titleHtml = titleMatch ? titleMatch[0] : '';
-    return str.replace(articlePattern, '$1' + titleHtml + newContent + '$3');
+  // 策略3: 查找 article 标签，替换其中的分类列表部分
+  const articleRegex = /(<article[^>]*>)([\s\S]*?)(<\/article>)/;
+  if (articleRegex.test(str)) {
+    const articleMatch = str.match(articleRegex);
+    if (articleMatch) {
+      const articleContent = articleMatch[2];
+      // 提取标题
+      const titleMatch = articleContent.match(/<h1[^>]*>[\s\S]*?<\/h1>/);
+      const titleHtml = titleMatch ? titleMatch[0] : '';
+      
+      // 查找并替换分类列表部分
+      // 可能包含 <ul>、<li>、<a> 等标签
+      const listPattern = /(<div[^>]*class="[^"]*category[^"]*"[^>]*>[\s\S]*?<\/div>|<ul[^>]*>[\s\S]*?<\/ul>)/;
+      if (listPattern.test(articleContent)) {
+        const replacedContent = articleContent.replace(listPattern, '<div class="category-lists">' + newContent + '</div>');
+        return str.replace(articleRegex, '$1' + replacedContent + '$3');
+      } else {
+        // 如果没有找到，在标题后插入
+        return str.replace(articleRegex, '$1' + titleHtml + '<div class="category-lists">' + newContent + '</div>$3');
+      }
+    }
+  }
+  
+  // 策略4: 最后手段 - 查找 body 标签，在合适位置插入
+  const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/;
+  if (bodyRegex.test(str)) {
+    const bodyMatch = str.match(bodyRegex);
+    if (bodyMatch) {
+      const bodyContent = bodyMatch[2];
+      // 查找 main 或 article-container
+      const mainMatch = bodyContent.match(/(<main[^>]*>|<div[^>]*id="article-container"[^>]*>)/);
+      if (mainMatch) {
+        const mainPos = bodyContent.indexOf(mainMatch[0]);
+        const beforeMain = bodyContent.substring(0, mainPos);
+        const afterMain = bodyContent.substring(mainPos);
+        // 在 main 后插入
+        return str.replace(bodyRegex, '$1' + beforeMain + afterMain.replace(/(<main[^>]*>|<div[^>]*id="article-container"[^>]*>)/, '$1<div class="category-lists">' + newContent + '</div>') + '$3');
+      }
+    }
+  }
+  
+  // 如果所有策略都失败，在 </body> 前插入（作为最后手段）
+  if (str.includes('</body>')) {
+    return str.replace('</body>', '<div class="category-lists">' + newContent + '</div></body>');
   }
   
   return str;
