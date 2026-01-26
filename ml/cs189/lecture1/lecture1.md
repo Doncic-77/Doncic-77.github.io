@@ -1,5 +1,5 @@
 ---
-title: CS189/289 Lecture 1: Introduction + ML Problem Framing
+title: "CS189/289 Lecture 1: Introduction + ML Problem Framing"
 date: 2026-01-25 21:48:10
 updated: 2026-01-25 21:48:10
 categories:
