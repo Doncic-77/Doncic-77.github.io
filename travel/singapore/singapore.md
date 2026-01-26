@@ -3,6 +3,9 @@ title: 新加坡旅行指南
 date: 2026-01-19 20:05:00
 updated: 2026-01-26 14:37:10
 permalink: travel/singapore/singapore/
+categories:
+  - travel
+  - singapore
 tags:
   - 旅行
   - 新加坡

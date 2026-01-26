@@ -3,6 +3,9 @@ title: 学习方法论
 date: 2026-01-21 11:30:00
 updated: 2026-01-26 15:16:36
 permalink: source/learn/learn/
+categories:
+  - source
+  - learn
 tags:
   - 学习
   - 方法论

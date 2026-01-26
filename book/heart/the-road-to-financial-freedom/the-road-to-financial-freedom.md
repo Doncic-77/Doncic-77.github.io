@@ -3,6 +3,10 @@ title: 财务自由之路
 date: 2026-01-19 17:49:09
 updated: 2026-01-19 17:49:09
 permalink: book/heart/the-road-to-financial-freedom/the-road-to-financial-freedom/
+categories:
+  - book
+  - heart
+  - the-road-to-financial-freedom
 tags:
   - 理财
   - 个人成长
