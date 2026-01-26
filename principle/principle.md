@@ -5,7 +5,7 @@ updated: 2026-01-21 11:20:00
 permalink: principle/principle/
 sticky: 100
 categories:
-  - principle
+  - [principle]
 tags:
   - 工作
   - 原则

@@ -19,7 +19,7 @@ hexo.extend.filter.register('after_render:html', function(str, data) {
   // categories/book/index.html -> 'book'
   // categories/book/heart/index.html -> 'book/heart'
   const pathMatch = data.path.match(/^categories\/(.+)\/index\.html$/);
-  const categoryName = pathMatch ? pathMatch[1] : null;
+  const categoryPath = pathMatch ? pathMatch[1] : null;
   
   // 判断是 categories 首页还是具体分类页面
   const isCategoriesIndex = data.path === 'categories/index.html';
@@ -27,107 +27,112 @@ hexo.extend.filter.register('after_render:html', function(str, data) {
   if (isCategoriesIndex) {
     // 处理 categories 首页：只显示顶级分类
     return renderCategoriesIndex(str, allCategories);
-  } else if (categoryName) {
+  } else if (categoryPath) {
     // 处理具体分类页面：只显示直接子分类
-    return renderCategoryPage(str, allCategories, categoryName);
+    return renderCategoryPage(str, allCategories, categoryPath);
   }
   
   return str;
 });
 
-// 渲染 categories 首页
+// 从分类的 path 属性提取层级路径
+// 例如：categories/book/heart/ -> book/heart
+function getCategoryPath(cat) {
+  // path 格式：categories/xxx/yyy/
+  const match = cat.path.match(/^categories\/(.+)\/$/);
+  return match ? match[1] : cat.name;
+}
+
+// 获取路径的深度（层级数）
+function getPathDepth(pathStr) {
+  return pathStr.split('/').length;
+}
+
+// 渲染 categories 首页：只显示顶级分类
 function renderCategoriesIndex(str, allCategories) {
-  // 收集所有顶级分类名（从所有分类路径中提取）
-  const topLevelMap = new Map(); // name -> { totalCount, path }
-  
-  allCategories.forEach(cat => {
-    const topName = cat.name.split('/')[0];
-    
-    if (!topLevelMap.has(topName)) {
-      topLevelMap.set(topName, { totalCount: 0, path: null });
-    }
-    
-    const entry = topLevelMap.get(topName);
-    entry.totalCount += cat.length || 0;
-    
-    // 如果这个分类名正好是顶级分类，记录它的 path
-    if (cat.name === topName) {
-      entry.path = cat.path;
-    }
+  // 顶级分类：path 中只有一级，如 categories/book/
+  const topLevelCategories = allCategories.filter(cat => {
+    const catPath = getCategoryPath(cat);
+    return getPathDepth(catPath) === 1;
   });
   
-  // 构建顶级分类列表
-  const topLevelCategories = [];
-  topLevelMap.forEach((value, name) => {
-    topLevelCategories.push({
-      name: name,
-      path: value.path || ('categories/' + name),
-      length: value.totalCount
+  // 计算每个顶级分类的总文章数（包括所有子分类）
+  const categoriesWithCount = topLevelCategories.map(cat => {
+    const catPath = getCategoryPath(cat);
+    let totalCount = cat.length || 0;
+    
+    // 统计所有子分类的文章数
+    allCategories.forEach(subCat => {
+      const subPath = getCategoryPath(subCat);
+      if (subPath.startsWith(catPath + '/')) {
+        totalCount += subCat.length || 0;
+      }
     });
+    
+    return {
+      name: cat.name,
+      path: cat.path,
+      length: totalCount
+    };
   });
   
   // 按名称排序
-  topLevelCategories.sort((a, b) => a.name.localeCompare(b.name));
+  categoriesWithCount.sort((a, b) => a.name.localeCompare(b.name));
   
-  const html = generateCategoryTable(topLevelCategories, null);
+  const html = generateCategoryTable(categoriesWithCount, null);
   return replaceCategoryContent(str, html);
 }
 
-// 渲染具体分类页面
-function renderCategoryPage(str, allCategories, categoryName) {
-  // 收集直接子分类（只显示第一级子分类）
-  const childrenMap = new Map(); // fullChildName -> { name, totalCount, path }
+// 渲染具体分类页面：只显示直接子分类
+function renderCategoryPage(str, allCategories, currentPath) {
+  const currentDepth = getPathDepth(currentPath);
   
-  allCategories.forEach(cat => {
-    if (cat.name.startsWith(categoryName + '/')) {
-      const remaining = cat.name.substring(categoryName.length + 1);
-      const firstLevelName = remaining.split('/')[0];
-      const fullChildName = categoryName + '/' + firstLevelName;
-      
-      if (!childrenMap.has(fullChildName)) {
-        childrenMap.set(fullChildName, { name: firstLevelName, totalCount: 0, path: null });
-      }
-      
-      const entry = childrenMap.get(fullChildName);
-      entry.totalCount += cat.length || 0;
-      
-      // 如果这个分类名正好是直接子分类，记录它的 path
-      if (cat.name === fullChildName) {
-        entry.path = cat.path;
-      }
-    }
+  // 找到直接子分类（深度比当前多1，且前缀匹配）
+  const directChildren = allCategories.filter(cat => {
+    const catPath = getCategoryPath(cat);
+    const catDepth = getPathDepth(catPath);
+    return catDepth === currentDepth + 1 && catPath.startsWith(currentPath + '/');
   });
   
-  // 构建子分类列表
-  const children = [];
-  childrenMap.forEach((value, fullName) => {
-    children.push({
-      name: value.name,
-      fullName: fullName,
-      path: value.path || ('categories/' + fullName),
-      length: value.totalCount
+  // 计算每个子分类的总文章数（包括其所有后代分类）
+  const childrenWithCount = directChildren.map(cat => {
+    const catPath = getCategoryPath(cat);
+    let totalCount = cat.length || 0;
+    
+    // 统计所有后代分类的文章数
+    allCategories.forEach(subCat => {
+      const subPath = getCategoryPath(subCat);
+      if (subPath.startsWith(catPath + '/')) {
+        totalCount += subCat.length || 0;
+      }
     });
+    
+    return {
+      name: cat.name,
+      path: cat.path,
+      length: totalCount
+    };
   });
   
   // 按名称排序
-  children.sort((a, b) => a.name.localeCompare(b.name));
+  childrenWithCount.sort((a, b) => a.name.localeCompare(b.name));
   
-  if (children.length > 0) {
-    // 有子分类，显示子分类列表（替换掉文章列表）
-    const html = generateCategoryTable(children, categoryName);
+  if (childrenWithCount.length > 0) {
+    // 有子分类，显示子分类列表
+    const html = generateCategoryTable(childrenWithCount, currentPath);
     return replaceCategoryContent(str, html);
   }
   
   // 没有子分类，保持原有的文章列表，但添加导航
-  return addNavigationToArticleList(str, categoryName);
+  return addNavigationToArticleList(str, currentPath);
 }
 
 // 生成分类表格 HTML
-function generateCategoryTable(categories, parentCategory) {
+function generateCategoryTable(categories, parentPath) {
   // 构建面包屑导航
   let breadcrumbHtml = '';
-  if (parentCategory) {
-    const parts = parentCategory.split('/');
+  if (parentPath) {
+    const parts = parentPath.split('/');
     let pathAccum = '';
     breadcrumbHtml = '<a href="/categories/">root</a>';
     parts.forEach((part, idx) => {
@@ -145,11 +150,11 @@ function generateCategoryTable(categories, parentCategory) {
   
   // 构建返回链接
   let backLink = '';
-  if (parentCategory) {
-    const parts = parentCategory.split('/');
+  if (parentPath) {
+    const parts = parentPath.split('/');
     if (parts.length > 1) {
-      const parentPath = parts.slice(0, -1).join('/');
-      backLink = `<a href="/categories/${parentPath}/" class="qoj-back-link">◀ Back</a>`;
+      const parentOfParent = parts.slice(0, -1).join('/');
+      backLink = `<a href="/categories/${parentOfParent}/" class="qoj-back-link">◀ Back</a>`;
     } else {
       backLink = `<a href="/categories/" class="qoj-back-link">◀ Back</a>`;
     }
@@ -189,7 +194,8 @@ function generateCategoryTable(categories, parentCategory) {
   
   categories.forEach(cat => {
     const displayName = cat.name;
-    const href = '/' + cat.path + '/';
+    // 修复双斜杠问题
+    const href = '/' + cat.path.replace(/\/+$/, '') + '/';
     html += `
       <tr>
         <td>
@@ -212,8 +218,8 @@ function generateCategoryTable(categories, parentCategory) {
 }
 
 // 为文章列表添加导航
-function addNavigationToArticleList(str, categoryName) {
-  const parts = categoryName.split('/');
+function addNavigationToArticleList(str, currentPath) {
+  const parts = currentPath.split('/');
   
   // 构建面包屑
   let breadcrumbHtml = '<a href="/categories/">root</a>';
@@ -254,13 +260,9 @@ function addNavigationToArticleList(str, categoryName) {
 `;
   
   // 在内容区域开始处插入导航
-  // 尝试多种模式
   const patterns = [
-    // Butterfly 主题的 category-lists
     /(<div[^>]*class="[^"]*category-lists[^"]*"[^>]*>)/,
-    // article-container
     /(<div[^>]*id="article-container"[^>]*>[\s\S]*?<article[^>]*>)/,
-    // 直接在 main 后面
     /(<main[^>]*>[\s\S]*?<div[^>]*class="[^"]*layout[^"]*"[^>]*>)/
   ];
   
@@ -273,91 +275,40 @@ function addNavigationToArticleList(str, categoryName) {
   return str;
 }
 
-// 替换分类内容区域 - 使用最强大的匹配策略
+// 替换分类内容区域
 function replaceCategoryContent(str, newContent) {
-  // 策略1: 直接查找并替换 .category-lists div 及其所有内容
-  // 使用更精确的匹配，包括可能的嵌套结构
-  // list_categories() 可能生成 <ul><li> 嵌套结构
+  // 策略1: 替换 .category-lists div（categories 首页使用）
   const categoryListsRegex = /<div[^>]*class="[^"]*category-lists[^"]*"[^>]*>[\s\S]*?<\/div>/;
-  const match = str.match(categoryListsRegex);
-  if (match) {
-    // 计算匹配的 div 标签深度，找到对应的闭合标签
-    const matchStart = str.indexOf(match[0]);
-    const matchContent = match[0];
-    
-    // 简单替换：直接替换整个匹配
+  if (categoryListsRegex.test(str)) {
     return str.replace(categoryListsRegex, '<div class="category-lists">' + newContent + '</div>');
   }
   
-  // 策略2: 如果找不到 category-lists，查找包含分类链接的区域
-  // list_categories 会生成包含 /categories/ 链接的 HTML
-  const categoryLinksRegex = /<div[^>]*>[\s\S]*?<a[^>]*href="[^"]*\/categories\/[^"]*"[\s\S]*?<\/div>/;
-  if (categoryLinksRegex.test(str)) {
-    // 找到包含分类链接的 div，尝试替换
-    const linkMatch = str.match(categoryLinksRegex);
-    if (linkMatch) {
-      // 查找这个 div 的开始位置
-      const linkMatchStart = str.indexOf(linkMatch[0]);
-      // 向前查找最近的 <div class="category-lists"> 或类似的 div
-      const beforeMatch = str.substring(0, linkMatchStart);
-      const categoryDivMatch = beforeMatch.match(/<div[^>]*class="[^"]*category[^"]*"[^>]*>/);
-      if (categoryDivMatch) {
-        const divStart = categoryDivMatch[0];
-        const divStartPos = beforeMatch.lastIndexOf(divStart);
-        // 向后查找对应的 </div>
-        const afterMatch = str.substring(linkMatchStart + linkMatch[0].length);
-        const divEndPos = afterMatch.indexOf('</div>');
-        if (divEndPos !== -1) {
-          const beforeDiv = str.substring(0, divStartPos);
-          const afterDiv = afterMatch.substring(divEndPos + 6);
-          return beforeDiv + '<div class="category-lists">' + newContent + '</div>' + afterDiv;
-        }
-      }
-    }
+  // 策略2: 替换 #category div（分类页面使用）
+  // 匹配 <div id="category">...</div> 直到遇到 </div><div class="aside-content"
+  const categoryDivRegex = /<div[^>]*id="category"[^>]*>[\s\S]*?<\/div>(?=<div[^>]*class="[^"]*aside-content)/;
+  if (categoryDivRegex.test(str)) {
+    return str.replace(categoryDivRegex, '<div id="category">' + newContent + '</div>');
   }
   
-  // 策略3: 查找 article 标签，替换其中的分类列表部分
+  // 策略3: 更宽松的 #category 匹配
+  const categoryDivLooseRegex = /(<div[^>]*id="category"[^>]*>)([\s\S]*?)(<\/div>[\s]*<div[^>]*class="[^"]*aside)/;
+  if (categoryDivLooseRegex.test(str)) {
+    return str.replace(categoryDivLooseRegex, '$1' + newContent + '</div><div class="aside');
+  }
+  
+  // 策略4: 查找 article 标签
   const articleRegex = /(<article[^>]*>)([\s\S]*?)(<\/article>)/;
   if (articleRegex.test(str)) {
     const articleMatch = str.match(articleRegex);
     if (articleMatch) {
       const articleContent = articleMatch[2];
-      // 提取标题
       const titleMatch = articleContent.match(/<h1[^>]*>[\s\S]*?<\/h1>/);
       const titleHtml = titleMatch ? titleMatch[0] : '';
-      
-      // 查找并替换分类列表部分
-      // 可能包含 <ul>、<li>、<a> 等标签
-      const listPattern = /(<div[^>]*class="[^"]*category[^"]*"[^>]*>[\s\S]*?<\/div>|<ul[^>]*>[\s\S]*?<\/ul>)/;
-      if (listPattern.test(articleContent)) {
-        const replacedContent = articleContent.replace(listPattern, '<div class="category-lists">' + newContent + '</div>');
-        return str.replace(articleRegex, '$1' + replacedContent + '$3');
-      } else {
-        // 如果没有找到，在标题后插入
-        return str.replace(articleRegex, '$1' + titleHtml + '<div class="category-lists">' + newContent + '</div>$3');
-      }
+      return str.replace(articleRegex, '$1' + titleHtml + '<div class="category-lists">' + newContent + '</div>$3');
     }
   }
   
-  // 策略4: 最后手段 - 查找 body 标签，在合适位置插入
-  const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/;
-  if (bodyRegex.test(str)) {
-    const bodyMatch = str.match(bodyRegex);
-    if (bodyMatch) {
-      const bodyContent = bodyMatch[2];
-      // 查找 main 或 article-container
-      const mainMatch = bodyContent.match(/(<main[^>]*>|<div[^>]*id="article-container"[^>]*>)/);
-      if (mainMatch) {
-        const mainPos = bodyContent.indexOf(mainMatch[0]);
-        const beforeMain = bodyContent.substring(0, mainPos);
-        const afterMain = bodyContent.substring(mainPos);
-        // 在 main 后插入
-        return str.replace(bodyRegex, '$1' + beforeMain + afterMain.replace(/(<main[^>]*>|<div[^>]*id="article-container"[^>]*>)/, '$1<div class="category-lists">' + newContent + '</div>') + '$3');
-      }
-    }
-  }
-  
-  // 如果所有策略都失败，在 </body> 前插入（作为最后手段）
+  // 策略5: 最后手段 - 在 </body> 前插入
   if (str.includes('</body>')) {
     return str.replace('</body>', '<div class="category-lists">' + newContent + '</div></body>');
   }

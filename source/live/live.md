@@ -4,8 +4,7 @@ date: 2026-01-21 11:30:00
 updated: 2026-01-21 11:30:00
 permalink: source/live/live/
 categories:
-  - source
-  - live
+  - [source, live]
 tags:
   - 生活
   - 理财

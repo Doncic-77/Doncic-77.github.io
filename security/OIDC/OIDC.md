@@ -4,8 +4,7 @@ date: 2026-01-20 19:06:00
 updated: 2026-01-20 19:06:00
 permalink: security/OIDC/OIDC/
 categories:
-  - security
-  - OIDC
+  - [security, OIDC]
 tags:
   - 安全
   - OIDC

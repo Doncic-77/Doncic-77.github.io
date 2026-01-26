@@ -1,5 +1,7 @@
-// Hexo 脚本：根据文件路径自动设置 categories
-// 这个脚本会在 Hexo 处理文章前运行，为每篇文章设置基于路径的 categories
+// Hexo 脚本：根据文件路径自动设置 categories（嵌套层级结构）
+// 这个脚本会在 Hexo 处理文章前运行，为每篇文章设置基于路径的嵌套 categories
+// 例如：ml/cs189/lecture1/lecture1.md -> categories: [['ml', 'cs189', 'lecture1']]
+// 这样会生成嵌套分类：ml -> cs189 -> lecture1
 
 const fs = require('fs');
 const path = require('path');
@@ -38,8 +40,13 @@ hexo.extend.filter.register('before_post_render', function(data) {
     const hasCategories = data.categories && data.categories.data && data.categories.data.length > 0;
     
     if (!hasCategories && directories.length > 0) {
-      // 使用 Hexo 的 API 设置 categories
-      data.categories = directories;
+      // 使用嵌套数组语法设置嵌套分类
+      // [['ml', 'cs189', 'lecture1']] 表示 ml -> cs189 -> lecture1 的嵌套结构
+      // 这样 Hexo 会创建：
+      // - categories/ml/
+      // - categories/ml/cs189/
+      // - categories/ml/cs189/lecture1/
+      data.categories = [directories];
     }
   } catch (e) {
     // 如果不是符号链接或读取失败，忽略
@@ -47,4 +54,3 @@ hexo.extend.filter.register('before_post_render', function(data) {
   
   return data;
 });
-
