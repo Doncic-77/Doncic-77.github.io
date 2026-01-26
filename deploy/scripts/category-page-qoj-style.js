@@ -20,10 +20,33 @@ hexo.extend.filter.register('after_render:html', function(str, data) {
   if (!currentCategory) return str;
   
   // 获取子分类（名称以 "categoryName/" 开头的分类）
-  const children = allCategories.filter(cat => {
-    if (!cat.name.includes('/')) return false;
-    const parts = cat.name.split('/');
-    return parts.length > 1 && parts[0] === categoryName;
+  const children = [];
+  allCategories.forEach(cat => {
+    if (cat.name && cat.name.includes('/')) {
+      const parts = cat.name.split('/');
+      // 检查是否是直接子分类（只有一级深度）
+      if (parts.length === 2 && parts[0] === categoryName) {
+        children.push(cat);
+      } else if (parts.length > 2 && parts[0] === categoryName) {
+        // 多级子分类，只取第一级
+        const firstLevelName = categoryName + '/' + parts[1];
+        if (!children.find(c => c.name === firstLevelName)) {
+          // 创建一个虚拟的分类对象
+          const virtualCat = {
+            name: firstLevelName,
+            path: 'categories/' + firstLevelName,
+            length: 0
+          };
+          // 计算这个虚拟分类下的文章数
+          allCategories.forEach(subCat => {
+            if (subCat.name && subCat.name.startsWith(firstLevelName + '/')) {
+              virtualCat.length += subCat.length || 0;
+            }
+          });
+          children.push(virtualCat);
+        }
+      }
+    }
   });
   
   // 如果有子分类，在文章列表前插入子分类表格
@@ -62,16 +85,22 @@ hexo.extend.filter.register('after_render:html', function(str, data) {
 </div>
 `;
     
-    // 在文章列表前插入子分类表格
-    // 查找文章列表的标题或第一个文章项
-    const articleTitlePattern = /<div[^>]*class="article-sort-title"[^>]*>/;
-    if (articleTitlePattern.test(str)) {
-      str = str.replace(articleTitlePattern, subcategoriesHTML + '$&');
+    // 如果有子分类，替换整个文章列表区域为子分类表格
+    // 查找 #category 或 .article-sort 区域
+    const categoryBlockPattern = /<div[^>]*id="category"[^>]*>[\s\S]*?<\/div>/;
+    const articleSortPattern = /<div[^>]*class="article-sort"[^>]*>[\s\S]*?<\/div>/;
+    
+    if (categoryBlockPattern.test(str)) {
+      // 替换整个 category 块
+      str = str.replace(categoryBlockPattern, '<div id="category">' + subcategoriesHTML + '</div>');
+    } else if (articleSortPattern.test(str)) {
+      // 替换 article-sort 块
+      str = str.replace(articleSortPattern, '<div class="article-sort">' + subcategoriesHTML + '</div>');
     } else {
-      // 如果没有找到标题，在 #category 或 .article-sort 前插入
-      const categoryPattern = /(<div[^>]*id="category"[^>]*>|<div[^>]*class="article-sort"[^>]*>)/;
-      if (categoryPattern.test(str)) {
-        str = str.replace(categoryPattern, subcategoriesHTML + '$&');
+      // 如果都没找到，在 body 内容区域插入
+      const bodyPattern = /(<body[^>]*>[\s\S]*?<main[^>]*>|<main[^>]*>)/;
+      if (bodyPattern.test(str)) {
+        str = str.replace(bodyPattern, '$1' + subcategoriesHTML);
       }
     }
   }
