@@ -223,6 +223,56 @@ tags:
 - 最近修改的文章会显示在最前面
 - 页面上同时显示创建时间和修改时间
 
+## UI 设计原则（QOJ 风格）
+
+博客采用极简风格，参考 [QOJ.ac](https://qoj.ac/) 的设计：
+
+### 导航栏
+- **只有两个按钮**：
+  - **博客** → `/archives/`（所有文章按 `updated` 时间倒序排列，类似 QOJ 的 Contests）
+  - **分类** → `/categories/`（文件夹树结构，类似 QOJ 的 Category）
+- 移除其他导航项（主页、标签、关于等）
+
+### 页面设计
+- **首页**：简洁列表，无花哨 banner
+- **分类页**：文件夹树结构，点击进入子文件夹或文章列表
+- **整体风格**：极简、干净、功能优先
+
+## Categories 自动生成机制
+
+### 核心原则
+- **Categories 的文件夹结构 = 博客内容目录结构**
+- 自动从文件路径生成 categories，无需手动维护
+
+### 生成规则
+1. **路径映射**：文件路径直接映射为 categories 层级
+   - 例如：`ml/cs189/lecture1/lecture1.md` → `categories: [ml, cs189, lecture1]`
+   - 例如：`book/heart/the-road-to-financial-freedom/xxx.md` → `categories: [book, heart, the-road-to-financial-freedom]`
+
+2. **排除规则**：以下目录不参与 categories 生成（因为它们不会被 symlink 到 `_posts`）：
+   - `deploy/` - 部署相关
+   - `trash/` - 垃圾文件
+   - `prompt/` - 设计文档
+   - `.github/` - Git 工作流
+   - `.git/` - Git 元数据
+   - `node_modules/` - 依赖包
+
+3. **图片处理**：图片文件（`.png`、`.jpg` 等）不单独展示，只作为文章资源使用
+
+### 实现方式
+- **脚本**：`deploy/scripts/set-categories.js` 自动从文件路径生成 categories
+- **手动补充**：如果脚本未生效，需要在 front matter 中手动添加 categories
+- **Categories 页面**：需要创建 `deploy/source/categories/index.md`（类型为 `categories`）
+
+### Categories 页面结构
+- **非叶子节点**：显示子文件夹列表（类似 QOJ 的 Category 页面）
+- **叶子节点**：显示该分类下的文章列表
+- **约束**：某个目录的子节点要么全是文件夹，要么全是文章，不混搭
+
+### 按钮跳转示例
+- 在文章中可以添加按钮跳转到特定分类，例如：
+  - `[📚 查看我的 CS189 笔记](/categories/ml/cs189/)`
+
 ## 关键决策记录
 
 - **scripts-tools 的位置**：从根目录移动到 `deploy/scripts-tools/`，因为它们是部署相关的工具
@@ -231,5 +281,7 @@ tags:
 - **文章目录的灵活性**：支持多层嵌套，所有符合定义的文章都会被自动收集和展示
 - **文章 URL 规则**：基于文件路径，如 `book/heart/the-road-to-financial-freedom/`
 - **时间戳管理**：每次修改文章都要更新 `updated` 字段，按修改时间排序显示
+- **UI 风格**：采用 QOJ 风格的极简设计，导航栏只有"博客"和"分类"两个按钮
+- **Categories 自动生成**：从文件路径自动生成 categories，保持目录结构与 categories 结构一致
 
 
