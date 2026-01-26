@@ -1,13 +1,14 @@
 ---
 title: "CS189/289 Lecture 1: Introduction + ML Problem Framing"
 date: 2026-01-25 21:48:10
-updated: 2026-01-25 21:48:10
+updated: 2026-01-26 17:35:00
 categories:
   - [ml, cs189, lecture1]
 tags:
   - ML
   - CS189
   - 课程笔记
+katex: true
 ---
 
 # CS189/289 Lecture 1: Introduction + ML Problem Framing
