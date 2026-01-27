@@ -1,7 +1,7 @@
 ---
 title: 学习方法论
 date: 2026-01-21 11:30:00
-updated: 2026-01-26 15:16:36
+updated: 2026-01-27 14:31:02
 permalink: source/learn/learn/
 categories:
   - [source, learn]
@@ -25,12 +25,11 @@ tags:
 
 # 技术栈
 
-## 0. ml入门
+## ml入门
 
 ### 刷课
 
 - [cs189-fall25](https://eecs189.org/fa25/) → [📚 查看我的 CS189 笔记](/categories/ml/cs189/)
-
 
 - [Stanford CS336: Language Modeling from Scratch](https://stanford-cs336.github.io/spring2025/index.html)
 
@@ -49,12 +48,36 @@ tags:
 - [hf blog](https://www.high-flyer.cn/blog/) - 幻方blog
 
 
-
 --- 
 
 <span style="color: #ff0000;"><strong>下面是仍未探索的领域</strong></span>
 
-## 1. PyTorch 执行模型
+## 量化交易系统
+
+### Rust 实时低延迟交易系统
+- **市场行情接入**：实时接收和处理市场数据流
+- **实时低延迟高性能计算**：交易信号生成、模型推理等核心计算模块
+- **智能算法交易**：执行策略和算法交易逻辑
+- **订单管理系统**：订单路由、执行和生命周期管理
+- **风控及监测**：实时风险控制和系统监控
+- **核心技术难点**：
+  - 微秒级延迟要求
+  - 百亿级吞吐量支持
+  - 极高的系统可靠性
+
+### Python 量化研究框架（AWS 云平台）
+- **分布式计算**：大规模并行计算任务调度和执行
+- **大规模数据存储**：历史行情、因子、模型等数据的存储与管理
+- **数据清洗与特征提取及筛选**：原始数据处理和特征工程
+- **模型训练及管理系统**：机器学习模型的训练、版本管理和部署
+- **深度学习模型训练基础设施**：支持大规模深度学习训练的计算环境
+- **基于历史数据的回测系统**：策略回测和性能评估
+- **性能优化**：部分性能敏感组件使用 Rust 实现
+- **核心技术难点**：
+  - 庞大的数据量处理
+  - 大规模计算资源调度和优化
+
+## PyTorch 执行模型
 
 ### forward 执行顺序
 - **Python 层**：`Module.__call__` →（pre-hook）→ `forward` →（post-hook）
@@ -84,7 +107,7 @@ tags:
   - `torch.cuda.synchronize()`
   - 不当计时（直接用 `time.time()` 测 GPU 耗时）
 
-## 2. 训练与推理执行性能
+## 训练与推理执行性能
 
 ### batch / micro-batch 组织方式
 - **batch**：一次 `forward+backward` 覆盖的样本数（影响吞吐/显存/统计效率）
@@ -108,7 +131,7 @@ tags:
 - **额外开销**：梯度/激活通信（NCCL）、跨卡同步点、pipeline stage 间发送
 - **关键变量**：拓扑（PCIe/NVLink）、bucket 大小、overlap（计算/通信重叠）
 
-## 3. 算子与 Kernel 执行
+## 算子与 Kernel 执行
 
 ### Triton 算子编写
 - **定位**：写自定义 GPU kernel 的高层 DSL（迭代速度快）
@@ -129,7 +152,7 @@ tags:
 - **Eager**：每个 op 对应一次或多次 kernel launch
 - **CUDA Graph**：capture 稳定的 launch 序列，重放时减少 Python/launch 开销，提高吞吐与稳定性
 
-## 4. 分布式训练机制
+## 分布式训练机制
 
 ### data parallel（DP / DDP）
 - **思路**：每卡一份模型副本，数据切分；梯度在反向时 all-reduce 同步
@@ -155,7 +178,7 @@ tags:
 ### restart 流程
 - 重建进程组 → 构建模型/优化器 → load checkpoint → 恢复 step/scheduler/scaler → 继续训练
 
-## 5. Linux / OS 执行环境
+## Linux / OS 执行环境
 
 ### 进程 / 线程调度（scheduler）
 - 关键点：亲和性（affinity）、上下文切换、worker 并发（DataLoader/通信线程）
@@ -170,7 +193,7 @@ tags:
 - 磁盘/网络 FS → page cache → 用户态 buffer →（可选）pin memory → H2D
 - 关注：顺序/随机、并发度、预取、压缩与解码开销
 
-## 6. GPU 通信与互联
+## GPU 通信与互联
 
 ### NCCL 通信模型
 - collective（all-reduce/all-gather/reduce-scatter/broadcast），根据拓扑选择 ring/tree 等算法
@@ -185,7 +208,7 @@ tags:
 ### NVLink 拓扑
 - 更高带宽/更低延迟；连接图结构影响通信效率
 
-## 7. 网络与内核相关能力
+## 网络与内核相关能力
 
 ### RDMA 使用场景
 - 跨机训练通信（IB/RoCE），降低 CPU 参与、提升带宽、降低延迟
@@ -198,7 +221,7 @@ tags:
 - 计算：调度、内存管理、驱动资源仲裁
 - 通信：socket 栈、路由、拥塞控制；是否走 RDMA/用户态路径决定 kernel 参与程度
 
-## 8. 基础cs
+## 基础cs
 - 网络协议
 - cpp
 
